@@ -1,0 +1,12 @@
+{
+  "name": "selaria-cardoso-coimbra-publicador",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs"
+  }
+}
