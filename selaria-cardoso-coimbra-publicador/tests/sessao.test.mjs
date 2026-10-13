@@ -60,8 +60,20 @@ test("callback troca o código, grava cookie criptografado e não expõe o token
   assert.match(cookies, /ml_sessao=[^;]+; Path=\/; HttpOnly; Secure; SameSite=Lax/);
   assert.equal(cookies.includes("APP_USR-aaa"), false);
   assert.equal(cookies.includes("TG-rrr"), false);
+  assert.equal(res.headers.getSetCookie().filter((c) => c.startsWith("ml_sessao=")).length, 1);
+  assert.equal(res.headers.getSetCookie().some((c) => c.startsWith("ml_estado=")), false);
 });
 
+
+
+test("callback informa invalid_client sem expor segredos", async () => {
+  globalThis.fetch = async () => new Response(JSON.stringify({ error: "invalid_client", message: "invalid client" }), { status: 400 });
+  const req = new Request(SITE + "/api/ml/callback?code=TG-codigo&state=abc", { headers: { cookie: "ml_estado=abc" } });
+  const res = await callback(req);
+  assert.equal(res.status, 302);
+  assert.equal(res.headers.get("location"), "/?erro=troca&codigo=invalid_client");
+  assert.equal(res.headers.getSetCookie().some((c) => c.startsWith("ml_sessao=")), false);
+});
 test("me devolve a conta conectada sem tokens", async () => {
   const sessao = selar({ access_token: "APP_USR-aaa", refresh_token: "TG-rrr", user_id: 99, expires_at: Date.now() + 5 * 3600 * 1000 });
   globalThis.fetch = async (url, init) => {

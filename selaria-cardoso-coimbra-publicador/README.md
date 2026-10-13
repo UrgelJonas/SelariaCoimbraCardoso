@@ -1,4 +1,4 @@
-# Selaria Cardoso Coimbra — Central Mercado Livre v1.1.0
+# Selaria Cardoso Coimbra — Central Mercado Livre v1.1.1
 
 Publicador e central operacional do Mercado Livre com a identidade visual da **Selaria Cardoso Coimbra**.
 
@@ -109,3 +109,9 @@ Functions directory: netlify/functions
 ```
 
 Se os arquivos do projeto estiverem diretamente na raiz do repositório, deixe o Base directory vazio.
+
+
+## v1.1.1 — correção de conexão OAuth
+- O callback de login envia somente um cookie de sessão no redirect de sucesso, evitando problemas de múltiplos `Set-Cookie`.
+- Mensagens de erro OAuth mais claras para `invalid_client`, `invalid_grant` e afins.
+- A interface tenta novamente consultar a sessão após um retorno de login bem-sucedido.

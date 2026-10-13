@@ -74,8 +74,10 @@ export async function pedirToken(parametros) {
   });
   const dados = await resposta.json().catch(() => ({}));
   if (!resposta.ok) {
-    const erro = new Error(dados.message || dados.error || "O Mercado Livre recusou o pedido de token.");
+    const erro = new Error(dados.message || dados.error_description || dados.error || "O Mercado Livre recusou o pedido de token.");
     erro.status = resposta.status;
+    erro.oauth_code = String(dados.error || "");
+    erro.oauth_description = String(dados.error_description || dados.message || "");
     throw erro;
   }
   return dados;
