@@ -1,0 +1,8 @@
+# Estas variáveis são cadastradas no painel do Netlify (Site configuration > Environment variables).
+# Nunca coloque valores reais neste arquivo nem envie o Secret por chat.
+ML_CLIENT_ID=
+ML_CLIENT_SECRET=
+# Texto longo e aleatório, com pelo menos 32 caracteres. Protege o cookie de sessão.
+SESSION_SECRET=
+# Opcional. Se vazio, o site usa o endereço em que está publicado + /api/ml/callback.
+ML_REDIRECT_URI=

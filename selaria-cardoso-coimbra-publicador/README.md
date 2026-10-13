@@ -1,4 +1,4 @@
-# Selaria Cardoso Coimbra — Central Mercado Livre v1.1.1
+# Selaria Cardoso Coimbra — Central Mercado Livre v1.1.0
 
 Publicador e central operacional do Mercado Livre com a identidade visual da **Selaria Cardoso Coimbra**.
 
