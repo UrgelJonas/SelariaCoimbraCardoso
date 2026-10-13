@@ -22,7 +22,11 @@ export default async (req) => {
 
   try {
     const dados = await pedirToken({ grant_type: "authorization_code", code: codigo, redirect_uri: urlDeRetorno(req) });
-    return voltar(null, [limpar, cookieSessao(sessaoDoToken(dados))]);
+    // Em produção no Netlify, enviar dois Set-Cookie no mesmo 302 pode
+    // fazer o cookie de sessão se perder. O ml_estado já expira em 10 min
+    // e será sobrescrito no próximo login; no sucesso enviamos apenas
+    // o cookie ml_sessao, que é o que mantém a conta conectada.
+    return voltar(null, [cookieSessao(sessaoDoToken(dados))]);
   } catch (erro) {
     console.error("Falha ao trocar o código por token:", erro.status, erro.message);
     return voltar("troca", [limpar]);

@@ -53,7 +53,10 @@ test("callback troca o código, grava cookie criptografado e não expõe o token
   assert.equal(corpoEnviado.get("grant_type"), "authorization_code");
   assert.equal(corpoEnviado.get("code"), "TG-codigo");
   assert.equal(corpoEnviado.get("redirect_uri"), SITE + "/api/ml/callback");
-  const cookies = res.headers.getSetCookie().join("\n");
+  const cookiesLista = res.headers.getSetCookie();
+  assert.equal(cookiesLista.length, 1, "callback de sucesso deve enviar apenas o cookie de sessão");
+  assert.equal(cookiesLista[0].startsWith("ml_sessao="), true);
+  const cookies = cookiesLista.join("\n");
   assert.match(cookies, /ml_sessao=[^;]+; Path=\/; HttpOnly; Secure; SameSite=Lax/);
   assert.equal(cookies.includes("APP_USR-aaa"), false);
   assert.equal(cookies.includes("TG-rrr"), false);
