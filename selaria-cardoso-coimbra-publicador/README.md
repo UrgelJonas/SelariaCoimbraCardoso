@@ -1,4 +1,4 @@
-# Selaria Cardoso Coimbra — Central Mercado Livre v1.0.0
+# Selaria Cardoso Coimbra — Central Mercado Livre v1.1.0
 
 Publicador e central operacional do Mercado Livre com a identidade visual da **Selaria Cardoso Coimbra**.
 
@@ -29,6 +29,27 @@ Publicador e central operacional do Mercado Livre com a identidade visual da **S
 - Pedidos, mensagens, faturamento e métricas conforme permissões da aplicação.
 - Central de otimização com qualidade, catálogo, estoque e moderações.
 - Edição em massa de preço, estoque e status.
+
+
+## Calculadora de preço de venda
+
+A aba **Calculadora** calcula o preço de venda recomendado a partir de:
+
+- preço de custo do produto;
+- custo da embalagem;
+- custo fixo por venda;
+- imposto em percentual;
+- margem líquida desejada em percentual.
+
+Fórmula usada:
+
+```text
+Preço de venda = (custo + embalagem + custo fixo) / (1 - imposto% - margem líquida%)
+```
+
+A tela mostra o preço sugerido, valor do imposto, lucro líquido, margem efetiva e markup. Também permite arredondar para final `,90`, final `,99` ou próximo real inteiro e enviar o preço calculado diretamente para o formulário de criação do anúncio. Os valores ficam salvos localmente no navegador para facilitar o uso recorrente.
+
+> Taxas percentuais do Mercado Livre não são adicionadas automaticamente. Se quiser considerá-las, elas devem ser incorporadas ao percentual informado ou ao custo correspondente.
 
 ## Nova função: SKU / EAN em lote
 

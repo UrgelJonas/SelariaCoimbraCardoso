@@ -829,3 +829,15 @@ test("interface Cardoso Coimbra usa grade simples PP P M G GG e ferramenta de SK
   assert.match(html, /nome do produto \+ cor \+ tamanho/);
   assert.match(html, /SELARIA CARDOSO COIMBRA/);
 });
+
+test("interface Cardoso Coimbra inclui calculadora de preço com custos imposto e margem líquida", () => {
+  const html = readFileSync(new URL("../public/index.html", import.meta.url), "utf8");
+  assert.match(html, /data-view="calculator"/);
+  assert.match(html, /id="calc-cost"/);
+  assert.match(html, /id="calc-packaging"/);
+  assert.match(html, /id="calc-fixed"/);
+  assert.match(html, /id="calc-tax"/);
+  assert.match(html, /id="calc-margin"/);
+  assert.match(html, /base\/\(1-totalPct\)/);
+  assert.match(html, /Usar este preço no anúncio/);
+});
