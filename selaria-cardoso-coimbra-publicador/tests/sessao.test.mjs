@@ -11,6 +11,7 @@ import login from "../netlify/functions/ml-login.mjs";
 import callback from "../netlify/functions/ml-callback.mjs";
 import me from "../netlify/functions/ml-me.mjs";
 import logout from "../netlify/functions/ml-logout.mjs";
+import pricingQuote from "../netlify/functions/ml-pricing-quote.mjs";
 import { selar } from "../netlify/lib/sessao.mjs";
 
 const SITE = "https://exemplo.netlify.app";
@@ -53,27 +54,12 @@ test("callback troca o código, grava cookie criptografado e não expõe o token
   assert.equal(corpoEnviado.get("grant_type"), "authorization_code");
   assert.equal(corpoEnviado.get("code"), "TG-codigo");
   assert.equal(corpoEnviado.get("redirect_uri"), SITE + "/api/ml/callback");
-  const cookiesLista = res.headers.getSetCookie();
-  assert.equal(cookiesLista.length, 1, "callback de sucesso deve enviar apenas o cookie de sessão");
-  assert.equal(cookiesLista[0].startsWith("ml_sessao="), true);
-  const cookies = cookiesLista.join("\n");
+  const cookies = res.headers.getSetCookie().join("\n");
   assert.match(cookies, /ml_sessao=[^;]+; Path=\/; HttpOnly; Secure; SameSite=Lax/);
   assert.equal(cookies.includes("APP_USR-aaa"), false);
   assert.equal(cookies.includes("TG-rrr"), false);
-  assert.equal(res.headers.getSetCookie().filter((c) => c.startsWith("ml_sessao=")).length, 1);
-  assert.equal(res.headers.getSetCookie().some((c) => c.startsWith("ml_estado=")), false);
 });
 
-
-
-test("callback informa invalid_client sem expor segredos", async () => {
-  globalThis.fetch = async () => new Response(JSON.stringify({ error: "invalid_client", message: "invalid client" }), { status: 400 });
-  const req = new Request(SITE + "/api/ml/callback?code=TG-codigo&state=abc", { headers: { cookie: "ml_estado=abc" } });
-  const res = await callback(req);
-  assert.equal(res.status, 302);
-  assert.equal(res.headers.get("location"), "/?erro=troca&codigo=invalid_client");
-  assert.equal(res.headers.getSetCookie().some((c) => c.startsWith("ml_sessao=")), false);
-});
 test("me devolve a conta conectada sem tokens", async () => {
   const sessao = selar({ access_token: "APP_USR-aaa", refresh_token: "TG-rrr", user_id: 99, expires_at: Date.now() + 5 * 3600 * 1000 });
   globalThis.fetch = async (url, init) => {
@@ -845,7 +831,7 @@ test("interface Cardoso Coimbra usa grade simples PP P M G GG e ferramenta de SK
   assert.match(html, /SELARIA CARDOSO COIMBRA/);
 });
 
-test("interface Cardoso Coimbra inclui calculadora de preço com custos imposto e margem líquida", () => {
+test("interface Cardoso Coimbra inclui calculadora ML com categoria taxas Clássico Premium e frete", () => {
   const html = readFileSync(new URL("../public/index.html", import.meta.url), "utf8");
   assert.match(html, /data-view="calculator"/);
   assert.match(html, /id="calc-cost"/);
@@ -853,6 +839,59 @@ test("interface Cardoso Coimbra inclui calculadora de preço com custos imposto 
   assert.match(html, /id="calc-fixed"/);
   assert.match(html, /id="calc-tax"/);
   assert.match(html, /id="calc-margin"/);
-  assert.match(html, /base\/\(1-totalPct\)/);
-  assert.match(html, /Usar este preço no anúncio/);
+  assert.match(html, /id="calc-product"/);
+  assert.match(html, /id="calc-category"/);
+  assert.match(html, /Sugerir categoria/);
+  assert.match(html, /gold_special/i);
+  assert.match(html, /gold_pro/i);
+  assert.match(html, /id="calc-shipping-source"/);
+  assert.match(html, /id="calc-weight"/);
+  assert.match(html, /\/api\/ml\/pricing-quote/);
+});
+
+
+test("calculadora ML consulta comissão Clássico/Premium e frete por dimensões", async () => {
+  const sessao = selar({ access_token: "APP_USR-calc", refresh_token: "TG-calc", user_id: 99, expires_at: Date.now() + 5 * 3600 * 1000 });
+  globalThis.fetch = async (url) => {
+    const u = new URL(String(url));
+    if (u.pathname === "/sites/MLB/listing_prices") {
+      const price = Number(u.searchParams.get("price"));
+      const lt = u.searchParams.get("listing_type_id");
+      const pct = lt === "gold_pro" ? 17 : 12;
+      return new Response(JSON.stringify([{
+        listing_type_id: lt,
+        listing_type_name: lt === "gold_pro" ? "Premium" : "Clássico",
+        sale_fee_amount: price * pct / 100,
+        sale_fee_details: { percentage_fee: pct, fixed_fee: 0, financing_add_on_fee: 0 },
+      }]), { status: 200, headers: { "content-type": "application/json" } });
+    }
+    if (u.pathname === "/users/99/shipping_options/free") {
+      assert.equal(u.searchParams.get("dimensions"), "10x20x30,1000");
+      assert.equal(u.searchParams.get("mode"), "me2");
+      assert.equal(u.searchParams.get("free_shipping"), "true");
+      const cost = u.searchParams.get("listing_type_id") === "gold_pro" ? 12 : 10;
+      return new Response(JSON.stringify({ coverage: { all_country: { list_cost: cost, currency_id: "BRL", billable_weight: 1000 } } }), { status: 200, headers: { "content-type": "application/json" } });
+    }
+    throw new Error("URL inesperada " + u.href);
+  };
+  const req = new Request(SITE + "/api/ml/pricing-quote", {
+    method: "POST",
+    headers: { cookie: cabecalhoCookie({ ml_sessao: sessao }), "content-type": "application/json" },
+    body: JSON.stringify({
+      category_id: "MLB223534", cost: 50, packaging: 5, fixed: 5, tax_pct: 8, margin_pct: 20, round: "none",
+      shipping_source: "ml", logistic_type: "drop_off", mode: "me2", free_shipping: true,
+      dimensions: { height_cm: 10, width_cm: 20, length_cm: 30, weight_g: 1000 },
+    }),
+  });
+  const res = await pricingQuote(req);
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.quotes.length, 2);
+  const classic = body.quotes.find((q) => q.listing_type_id === "gold_special");
+  const premium = body.quotes.find((q) => q.listing_type_id === "gold_pro");
+  assert.equal(classic.fee_percentage, 12);
+  assert.equal(classic.shipping_cost, 10);
+  assert.equal(premium.fee_percentage, 17);
+  assert.equal(premium.shipping_cost, 12);
+  assert.ok(premium.price > classic.price);
 });

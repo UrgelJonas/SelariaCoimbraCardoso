@@ -1,4 +1,4 @@
-# Selaria Cardoso Coimbra — Central Mercado Livre v1.1.1
+# Selaria Cardoso Coimbra — Central Mercado Livre v1.1.0
 
 Publicador e central operacional do Mercado Livre com a identidade visual da **Selaria Cardoso Coimbra**.
 
@@ -110,8 +110,6 @@ Functions directory: netlify/functions
 
 Se os arquivos do projeto estiverem diretamente na raiz do repositório, deixe o Base directory vazio.
 
+## v1.2.0 — Calculadora inteligente Mercado Livre
 
-## v1.1.1 — correção de conexão OAuth
-- O callback de login envia somente um cookie de sessão no redirect de sucesso, evitando problemas de múltiplos `Set-Cookie`.
-- Mensagens de erro OAuth mais claras para `invalid_client`, `invalid_grant` e afins.
-- A interface tenta novamente consultar a sessão após um retorno de login bem-sucedido.
+A calculadora agora pode sugerir/consultar a categoria do produto, buscar as tarifas reais de venda para Clássico (`gold_special`) e Premium (`gold_pro`) e estimar o custo de frete do vendedor pela API do Mercado Livre. Para cotação por dimensões, informe altura, largura, comprimento em centímetros e peso em gramas. A estimativa usa `/sites/MLB/listing_prices` e `/users/{user_id}/shipping_options/free`; o custo final de uma venda pode variar e deve ser conciliado pelo shipment real.
