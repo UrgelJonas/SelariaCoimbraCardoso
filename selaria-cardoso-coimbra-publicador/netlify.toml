@@ -1,3 +1,10 @@
 [build]
   publish = "public"
   functions = "netlify/functions"
+
+# Link secreto do cliente (Gestão): qualquer /c/<código> abre o portal; o código é validado pela API.
+[[redirects]]
+  from = "/c/*"
+  to = "/cliente.html"
+  status = 200
+  force = true
